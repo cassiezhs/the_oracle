@@ -6,8 +6,8 @@ import time
 # CONFIGURATION
 # ======================
 # Replace these with your printer's IDs if needed
-VENDOR_ID = 0x0000   # placeholder
-PRODUCT_ID = 0x0000  # placeholder
+VENDOR_ID = 0x6868   # placeholder
+PRODUCT_ID = 0x0200  # placeholder
 INTERFACE = 0
 
 # ======================

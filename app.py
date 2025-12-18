@@ -9,7 +9,7 @@ import usb.util
 # ======================
 # CONFIGURATION
 # ======================
-# Replace these with your printer's USB IDs
+# Replace with your printer's USB IDs
 VENDOR_ID = 0x0000   # placeholder
 PRODUCT_ID = 0x0000  # placeholder
 
@@ -44,7 +44,7 @@ Soft darkness, never frightening.
 Rules:
 - Write in English
 - 70 to 100 words
-- Short poetic lines suitable for receipt printing
+- Short poetic lines
 - No violence, curses, or fear
 - No medical, legal, or financial advice
 - Address the reader as "you"
@@ -64,19 +64,17 @@ Topic:
 # ======================
 # USB PRINTING (RAW ESC/POS)
 # ======================
-def print_receipt(text: str):
+def print_receipt(oracle_text: str):
     dev = usb.core.find(idVendor=VENDOR_ID, idProduct=PRODUCT_ID)
     if dev is None:
         raise RuntimeError("USB printer not found")
 
     try:
-        # Detach kernel driver if necessary
         if dev.is_kernel_driver_active(0):
             dev.detach_kernel_driver(0)
     except usb.core.USBError:
         pass
 
-    # Ensure a configuration is active
     try:
         dev.get_active_configuration()
     except usb.core.USBError:
@@ -85,7 +83,6 @@ def print_receipt(text: str):
     cfg = dev.get_active_configuration()
     intf = cfg[(0, 0)]
 
-    # Locate the bulk OUT endpoint
     ep_out = usb.util.find_descriptor(
         intf,
         custom_match=lambda e:
@@ -96,16 +93,37 @@ def print_receipt(text: str):
     if ep_out is None:
         raise RuntimeError("OUT endpoint not found")
 
+    # ======================
+    # RECEIPT LAYOUT
+    # ======================
+    candle = (
+        "      *\n"
+        "     /|\\\n"
+        "      |\n"
+        "      |\n\n"
+    )
+
+    header = (
+        "*** THE ORACLE ***\n"
+        "whispers from the dark\n\n"
+    )
+
+    footer = (
+        "\n~*~ trust the quiet pull ~*~\n"
+    )
+
+    receipt_text = (
+        candle
+        + header
+        + oracle_text
+        + footer
+    )
+
     receipt = (
         b"\x1b@"  # Initialize printer
+        + b"\n"
+        + encode_for_printer(receipt_text)
         + b"\n\n"
-        + b"*** THE ORACLE ***\n"
-        + b"whispers from the dark\n"
-        + b"--------------------\n\n"
-        + encode_for_printer(text)
-        + b"\n\n--------------------\n"
-        + b"carry this softly\n"
-        + b"trust the quiet pull\n\n"
         + b"\x1dV\x01"  # Full cut
     )
 
@@ -122,7 +140,7 @@ HTML = """
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dark Oracle</title>
+<title>The Oracle</title>
 <style>
 body {
   background: #0b0b0b;
